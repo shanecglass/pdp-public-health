@@ -9,3 +9,7 @@ explore: birth_weight_air_quality {
 explore: snap_qcew_acs {
   view_name: snap_qcew_acs
 }
+
+explore: county_demographics {
+  view_name: county_demographics
+}
