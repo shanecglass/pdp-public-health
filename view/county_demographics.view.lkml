@@ -2,10 +2,6 @@ view: county_demographics {
 
 derived_table: {
     sql:
-    CREATE TEMPORARY FUNCTION miles_to_meters(x FLOAT64) AS (x * 1609);
-CREATE TEMPORARY FUNCTION sqm_to_sqmi (x FLOAT64) AS (x / (1609*1609));
-
-
 #Defining the list of blockgroups within 1 mile of the store
 with county_area AS (
   SELECT
