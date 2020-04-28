@@ -57,15 +57,23 @@ with county_area AS (
     `bigquery-public-data.census_bureau_acs.county_2017_5yr`)
 
 SELECT
-  *
+  dense.*,
+  income.* EXCEPT(geo_id),
+  ages.* EXCEPT(geo_id),
+  demographics.* EXCEPT(geo_id),
+  CAST(covid_facts.date AS TIMESTAMP) AS date,
+  covid_facts.confirmed_cases,
+  covid_facts.deaths
 FROM
-  county_density
+  county_density dense
 FULL JOIN
-  county_income_buckets USING (geo_id)
+  county_income_buckets income USING (geo_id)
 FULL JOIN
-  county_ages USING (geo_id)
+  county_ages ages USING (geo_id)
 FULL JOIN
-  county_demographics USING (geo_id)
+  county_demographics demographics USING (geo_id)
+FULL JOIN
+  `bigquery-public-data.covid19_usafacts.summary` covid_facts ON dense.geo_id = covid_facts.county_fips_code
 
       ;;
   }
@@ -82,6 +90,12 @@ FULL JOIN
     description: "County name"
     type: string
     sql: ${TABLE}.county_name ;;
+  }
+
+  dimension: state_name {
+    description: "State name"
+    type: string
+    sql: ${TABLE}.state_name ;;
   }
 
   dimension: total_pop {
@@ -104,73 +118,103 @@ FULL JOIN
 
   measure: percent_of_income_under_50k {
     description: "Percent of households with income below $50k"
-    type: percent_of_total
+    type: sum
     sql: ${TABLE}.percent_income_under_50k ;;
   }
 
   measure: percent_of_income_between_50k_and_100k {
     description: "Percent of households with income above $50k, but below $100k"
-    type: percent_of_total
+    type: sum
     sql: ${TABLE}.percent_income_50k_to_100k ;;
   }
 
   measure: percent_of_income_over_100k {
     description: "Percent of households with income over $100k"
-    type: percent_of_total
+    type: sum
     sql: ${TABLE}.percent_income_over_100k ;;
   }
 
   measure: percent_of_males_over_65 {
     description: "Percent of males over the age of 65"
-    type: percent_of_total
+    type: average
     sql: ${TABLE}.percent_males_over_65 ;;
   }
 
   measure: percent_of_females_over_65 {
     description: "Percent of females over the age of 65"
-    type: percent_of_total
+    type: average
     sql: ${TABLE}.percent_females_over_65 ;;
   }
 
   measure: percent_male {
     description: "Percent of the total population that is male"
-    type: percent_of_total
+    type: average
     sql: ${TABLE}.percent_male ;;
   }
 
   measure: percent_female {
     description: "Percent of the total population that is female"
-    type: percent_of_total
+    type: average
     sql: ${TABLE}.percent_female ;;
   }
 
   measure: percent_white {
     description: "Percent of the total population that are white"
-    type: percent_of_total
+    type: sum
     sql: ${TABLE}.percent_white ;;
   }
 
   measure: percent_black {
     description: "Percent of the total population that are black"
-    type: percent_of_total
+    type: sum
     sql: ${TABLE}.percent_black ;;
   }
 
   measure: percent_asian {
     description: "Percent of the total population that are of Asian decent"
-    type: percent_of_total
+    type: sum
     sql: ${TABLE}.percent_asian ;;
   }
 
   measure: percent_hispanic {
     description: "Percent of the total population that are of Hispanic decent"
-    type: percent_of_total
+    type: sum
     sql: ${TABLE}.percent_hispanic ;;
   }
 
   measure: percent_american_indian {
     description: "Percent of the total population that are of American Indian decent"
-    type: percent_of_total
+    type: sum
     sql: ${TABLE}.percent_americanindian ;;
+  }
+
+  dimension: date {
+    description: "Date of COVID-19 confirmed cases and death totals"
+    type: date
+    sql: ${TABLE}.date ;;
+  }
+
+  measure: confirmed_covid_cases {
+    description: "Confirmed COVID-19 cases"
+    type: sum
+    sql: ${TABLE}.confirmed_cases ;;
+  }
+
+  measure: confirmed_covid_deaths {
+    description: "Confirmed COVID-19 deaths"
+    type: sum
+    sql: ${TABLE}.deaths ;;
+  }
+
+  measure: confirmed_covid_cases_per_100000 {
+    description: "Confirmed COVID-19 deaths"
+    type: sum
+    sql: ROUND(${TABLE}.confirmed_cases/${TABLE}.total_pop * 100000,2);;
+    }
+
+  measure: confirmed_covid_deaths_per_100000 {
+    description: "Confirmed COVID-19 deaths"
+    type: sum
+    sql: ROUND(${TABLE}.deaths/${TABLE}.total_pop * 100000,2) ;;
   }
 }
